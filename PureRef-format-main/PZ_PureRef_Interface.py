@@ -1,6 +1,6 @@
 import os
 import pureref_gen
-import PZ_PureRefGen
+import PZ_PurRefGen
 import sys
 
 """
@@ -27,6 +27,8 @@ purfolder_path = os.getcwd() + "/Purs"  # default output
 if not os.path.exists(purfolder_path):
     os.mkdir(purfolder_path)
 
+
+
 def getFolderInput():
     folder_path = input("Please Paste '02_anim_screenshot' dir here :")
     while "02_anim_screenshot" not in folder_path:
@@ -36,14 +38,29 @@ def getFolderInput():
         print(r'Q:\BA_S04\04_production\03_outputs\sr_004\ep_002\02_anim_screenshot')
         folderpath = input('Try Again :')
 
-    folders = next(os.walk(folder_path))[1]  # get all subfolders in imagefolder_path
+
     print("Starting Process")
 
-    pur_name = folder_path.split("\\")[-1]
+    sq_list = []
+    folders = next(os.walk(folder_path))[1]  # get all subfolders in imagefolder_path
+    for folder in folders:
+        if "setup" in folder:
+            continue
+        sequence = folder.split("_sh")[0]
 
-    PZ_PureRefGen.generate(folder_path,purfolder_path + pur_name + ".pur")
-    #puref_gen.generate (_old)
-    print("Finished Process. Output Location,:",purfolder_path)
+        if sequence not in sq_list:
+            sq_list.append(sequence)
+
+    pur_name = folder_path.split("\\")[-1]
+    pur_dir = folder_path.split("02_anim_screenshot")[0]
+    pur_dir = pur_dir + "\\03_previewRenders"
+
+    for sequence in sq_list:
+        file_sequence = sequence.replace("_","")
+        print("Creating " + file_sequence + ".pur")
+        PZ_PurRefGen.generate(folder_path,pur_dir +"\\" + file_sequence + ".pur",file_sequence)
+    # puref_gen.generate (_old)
+    print("Finished Process. Output Location,:",pur_dir)
 
 
 

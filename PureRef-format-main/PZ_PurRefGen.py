@@ -5,6 +5,9 @@ import os
 import re
 from io import BytesIO
 
+from pathlib import Path
+
+
 """
     
     PZ_PureRefGen - PurRef Tool
@@ -22,7 +25,7 @@ credit: https://github.com/FyorDev/PureRef-format.git
 ####################################################################################################
 
 
-def generate(read_folder, write_file):
+def generate(read_folder, write_file,sequence):
 
     # Natural sort https://stackoverflow.com/a/341745
     # For example: 0.jpg, 2.jpg, 10.jpg, 100.jpg
@@ -60,7 +63,16 @@ def generate(read_folder, write_file):
     # Add all images in read_folder to pur_file
     # The images will be sorted using natural sort, number them to control order
     files = sorted(os.listdir(read_folder), key=natural_keys)
-    pur_file.images = [process_image(os.path.join(read_folder, file)) for file in files]
+
+    files_LC = sorted([file.__str__() for file in Path(read_folder).rglob("*.jpg") if "setup" not in file.__str__()])
+
+    sq_files = []
+    for file in files_LC:
+
+        if str(sequence) in file:
+            sq_files.append(file)
+
+    pur_file.images = [process_image(os.path.join(read_folder, file)) for file in sq_files]
     pur_file.images = [image for image in pur_file.images if image is not None]  # remove None values
 
     if not pur_file.images:
