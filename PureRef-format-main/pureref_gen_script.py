@@ -43,6 +43,8 @@ for folder in folders:
     else:
         print("File already exists, skipping " + folder)
 
+
+
 # The file will say it has a "load error", just press "Open Anyway (Unsafe)"
 # This is only because the checksum to check for corruption is not generated correctly
 # Which is not a problem, I simply don't know how this checksum is generated
