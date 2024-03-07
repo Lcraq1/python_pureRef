@@ -55,6 +55,9 @@ def getFolderInput():
     pur_dir = folder_path.split("02_anim_screenshot")[0]
     pur_dir = pur_dir + "\\03_previewRenders"
 
+    if not os.path.exists(pur_dir):
+        os.mkdir(pur_dir)
+
     for sequence in sq_list:
         file_sequence = sequence.replace("_","")
         print("Creating " + file_sequence + ".pur")
