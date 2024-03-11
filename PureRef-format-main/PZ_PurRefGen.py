@@ -24,6 +24,41 @@ credit: https://github.com/FyorDev/PureRef-format.git
 # It is used in pureref_gen_script.py to create .pur files from all folders in Artists/
 ####################################################################################################
 
+def textOverlayoOnImage(opened_image=None, text_input=None, text_location=(10, 20), text_color=(255, 255, 255)):
+    """
+    Opens image_pathname and adds text to image
+
+    :param image_pathname:
+    :return:
+    """
+
+    print("Editing Image")
+
+    # Open image
+    image = opened_image
+
+    # Create a drawing context
+    draw = ImageDraw.Draw(image)
+
+    # Get the image's filename (without the extension)
+
+    # Choose a font (you need to provide the path to a TrueType font file)
+    font = ImageFont.truetype("arial.ttf", size=120)
+
+    # Specify the text color
+    text_col = text_color  # default: (255, 255, 255) is white
+
+    # Position to place the text
+    text_loc = text_location  # default: (10, 20) is top left
+
+    # Add the text to the image
+    draw.text(text_loc, text_input, fill=text_color, font=font)
+
+    # Save the modified image with the name
+
+    # Close the image
+
+    return image
 
 def generate(read_folder, write_file,sequence):
 
@@ -40,14 +75,19 @@ def generate(read_folder, write_file,sequence):
 
         print("Processing: " + path)
 
+
         image_name = str(path).split("\\")[-1]
+        image_name = image_name.split(".jpg")[0]
+        shot_nameframe = image_name.split("_")[-1]
+
+        print("shot_nameframe: " + shot_nameframe)
 
         image = Image.open(path).convert(mode="RGB")
-        image = textOverlayoOnImage(image,image_name)
+        image_PILed = textOverlayoOnImage(image,shot_nameframe)
         pur_image = items.PurImage()
 
         with BytesIO() as f:
-            image.save(f, format="PNG", compress_level=7)  # TODO: research why PureRef saves PNG differently sometimes
+            image_PILed.save(f, format="PNG", compress_level=7)  # TODO: research why PureRef saves PNG differently sometimes
             pur_image.pngBinary = f.getvalue()
             # bytes are used instead of PIL because the pngBinary can also be a reference to another image's transform
             # (duplicate images) this is the easiest way to handle it TODO: make PurFile work with PIL images
@@ -134,39 +174,3 @@ def generate(read_folder, write_file,sequence):
     pur_file.write(write_file)
     print("Done! File created")
 
-
-    def textOverlayoOnImage(opened_image, text_input=None, text_location=(10, 20), text_color=(255, 255, 255)):
-        """
-        Opens image_pathname and adds text to image
-
-        :param image_pathname:
-        :return:
-        """
-
-        print("Editing Image")
-
-        # Open image
-        image = opened_image
-
-        # Create a drawing context
-        draw = ImageDraw.Draw(image)
-
-        # Get the image's filename (without the extension)
-
-        # Choose a font (you need to provide the path to a TrueType font file)
-        font = ImageFont.truetype("arial.ttf", size=30)
-
-        # Specify the text color
-        text_col = text_color  # default: (255, 255, 255) is white
-
-        # Position to place the text
-        text_loc = text_location  # default: (10, 20) is top left
-
-        # Add the text to the image
-        draw.text(text_loc, text_input, fill=text_color, font=font)
-
-        # Save the modified image with the name
-
-        # Close the image
-
-        return image
