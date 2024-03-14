@@ -51,6 +51,7 @@ def getFolderInput():
         if sequence not in sq_list:
             sq_list.append(sequence)
 
+    # Establish output folder
     pur_name = folder_path.split("\\")[-1]
     pur_dir = folder_path.split("02_anim_screenshot")[0]
     pur_dir = pur_dir + "\\03_previewRenders"

@@ -12,7 +12,7 @@ from pathlib import Path
     
     PZ_PureRefGen - PurRef Tool
     
-Version: 0.01 
+Version: 0.12 
 Author: Luc Craquelin
 
 credit: https://github.com/FyorDev/PureRef-format.git
@@ -107,13 +107,45 @@ def generate(read_folder, write_file,sequence):
     # The images will be sorted using natural sort, number them to control order
     files = sorted(os.listdir(read_folder), key=natural_keys)
 
-    files_LC = sorted([file.__str__() for file in Path(read_folder).rglob("*.jpg") if "setup" not in file.__str__()])
+    file_dic = {}
+
+    for file in Path(read_folder).rglob("*.jpg"):
+        file = str(file)
+        if "setup" not in file:
+            file_name = file.split("\\")[-1]
+            file_dic[file_name] = file
+
+
+    s_folder = "S"+ read_folder[1:]
+
+    files_s = sorted([file.__str__() for file in Path(s_folder).rglob("*.jpg") if "setup" not in file.__str__()])
+
+    for file in files_s:
+        file = str(file)
+        if file not in file_dic and "setup" not in file:
+            file_name = file.split("\\")[-1]
+            file_dic[file_name] = file
+
+    Keys = list(file_dic.keys())
+    Keys.sort()
+    file_dic = {i: file_dic[i] for i in Keys}
+
+    import pprint
+    pprint.pprint(file_dic)
+    debug = input("####")
 
     sq_files = []
-    for file in files_LC:
 
-        if str(sequence) in file:
-            sq_files.append(file)
+    for shot_name in file_dic:
+        if sequence in shot_name:
+            sq_files.append(file_dic[shot_name])
+
+    pprint.pprint(sq_files)
+    debug = input("!!!!")
+    
+
+
+
 
     pur_file.images = [process_image(os.path.join(read_folder, file)) for file in sq_files]
     pur_file.images = [image for image in pur_file.images if image is not None]  # remove None values
