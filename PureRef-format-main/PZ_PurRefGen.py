@@ -24,47 +24,54 @@ credit: https://github.com/FyorDev/PureRef-format.git
 # It is used in pureref_gen_script.py to create .pur files from all folders in Artists/
 ####################################################################################################
 
-def textOverlayoOnImage(opened_image=None, text_input=None, text_location=(10, 20), text_color=(255, 255, 255)):
+def filterImageMovement():
     """
-    Opens image_pathname and adds text to image
-
-    :param image_pathname:
+    Detecting a different between frames by comparing RBG difference in a  pixel array.
     :return:
     """
 
-    print("Editing Image")
-
-    # Open image
-    image = opened_image
-
-    # Create a drawing context
-    draw = ImageDraw.Draw(image)
-
-    # Get the image's filename (without the extension)
-
-    # Choose a font (you need to provide the path to a TrueType font file)
-    font = ImageFont.truetype("arial.ttf", size=120)
-
-    # Specify the text color
-    text_col = text_color  # default: (255, 255, 255) is white
-
-    # Position to place the text
-    text_loc = text_location  # default: (10, 20) is top left
-
-    # Add the text to the image
-    draw.text(text_loc, text_input, fill=text_color, font=font)
-
-    # Save the modified image with the name
-
-    # Close the image
-
-    return image
 
 def generate(read_folder, write_file,sequence):
 
     # Natural sort https://stackoverflow.com/a/341745
     # For example: 0.jpg, 2.jpg, 10.jpg, 100.jpg
     # Instead of: 0.jpg, 10.jpg, 100.jpg, 2.jpg
+    def textOverlayoOnImage(opened_image=None, text_input=None, text_location=(10, 20), text_color=(255, 255, 255)):
+        """
+        Opens image_pathname and adds text to image
+
+        :param image_pathname:
+        :return:
+        """
+
+        print("Editing Image")
+
+        # Open image
+        image = opened_image
+
+        # Create a drawing context
+        draw = ImageDraw.Draw(image)
+
+        # Get the image's filename (without the extension)
+
+        # Choose a font (you need to provide the path to a TrueType font file)
+        font = ImageFont.truetype("arial.ttf", size=120)
+
+        # Specify the text color
+        text_col = text_color  # default: (255, 255, 255) is white
+
+        # Position to place the text
+        text_loc = text_location  # default: (10, 20) is top left
+
+        # Add the text to the image
+        draw.text(text_loc, text_input, fill=text_color, font=font)
+
+        # Save the modified image with the name
+
+        # Close the image
+
+        return image
+
     def natural_keys(text):
         return [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', text)]
 
@@ -130,21 +137,14 @@ def generate(read_folder, write_file,sequence):
     Keys.sort()
     file_dic = {i: file_dic[i] for i in Keys}
 
-    import pprint
-    pprint.pprint(file_dic)
-    debug = input("####")
-
     sq_files = []
 
     for shot_name in file_dic:
         if sequence in shot_name:
             sq_files.append(file_dic[shot_name])
 
-    pprint.pprint(sq_files)
-    debug = input("!!!!")
-    
-
-
+    #import pprint
+    #pprint.pprint(sq_files)
 
 
     pur_file.images = [process_image(os.path.join(read_folder, file)) for file in sq_files]
