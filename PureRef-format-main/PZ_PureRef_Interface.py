@@ -3,6 +3,7 @@ import pureref_gen
 import PZ_PurRefGen
 import sys
 
+
 """
 
     PZ_PurerefInterface - PurRef Tool
@@ -54,7 +55,7 @@ def getFolderInput():
     # Establish output folder
     pur_name = folder_path.split("\\")[-1]
     pur_dir = folder_path.split("02_anim_screenshot")[0]
-    pur_dir = pur_dir + "\\03_previewRenders"
+    pur_dir = os.path.join(pur_dir, "03_previewRenders")
 
     if not os.path.exists(pur_dir):
         os.mkdir(pur_dir)

@@ -6,6 +6,7 @@ import re
 from io import BytesIO
 
 from pathlib import Path
+import ImagePixelArray
 
 
 """
@@ -75,21 +76,21 @@ def generate(read_folder, write_file,sequence):
     def natural_keys(text):
         return [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', text)]
 
-    def process_image(path):
-        if not (path.endswith(".jpg") or path.endswith(".jpeg") or path.endswith(".png")):
-            print("Skipping processing, not a valid image: " + path)
+    def process_image(image_pathname):
+        if not (image_pathname.endswith(".jpg") or image_pathname.endswith(".jpeg") or image_pathname.endswith(".png")):
+            print("Skipping processing, not a valid image: " + image_pathname)
             return None
 
-        print("Processing: " + path)
+        print("Processing: " + image_pathname)
 
 
-        image_name = str(path).split("\\")[-1]
+        image_name = str(image_pathname).split("\\")[-1]
         image_name = image_name.split(".jpg")[0]
         shot_nameframe = image_name.split("_")[-1]
 
         print("shot_nameframe: " + shot_nameframe)
 
-        image = Image.open(path).convert(mode="RGB")
+        image = Image.open(image_pathname).convert(mode="RGB")
         image_PILed = textOverlayoOnImage(image,shot_nameframe)
         pur_image = items.PurImage()
 
@@ -98,11 +99,11 @@ def generate(read_folder, write_file,sequence):
             pur_image.pngBinary = f.getvalue()
             # bytes are used instead of PIL because the pngBinary can also be a reference to another image's transform
             # (duplicate images) this is the easiest way to handle it TODO: make PurFile work with PIL images
-
+        print("Name Debug: " , str(image_pathname).split("\\")[-1])
         pur_transform = items.PurGraphicsImageItem()
         pur_transform.reset_crop(image.width, image.height)
-        pur_transform.name = path.replace(".jpg", "")
-        pur_transform.source = path
+        pur_transform.name = str(image_pathname).split("\\")[-1]
+        pur_transform.source = image_pathname
         pur_image.transforms = [pur_transform]  # the first transform is the original, rest are duplicates
 
         return pur_image
@@ -114,37 +115,71 @@ def generate(read_folder, write_file,sequence):
     # The images will be sorted using natural sort, number them to control order
     files = sorted(os.listdir(read_folder), key=natural_keys)
 
+    # initialize empty file dictionary
     file_dic = {}
-
+    # Search for jpegs in provided production folder
     for file in Path(read_folder).rglob("*.jpg"):
         file = str(file)
-        if "setup" not in file:
+        if "setup" not in file and sequence in str(file):
             file_name = file.split("\\")[-1]
             file_dic[file_name] = file
 
-
+    # Also search s drive for remote work
     s_folder = "S"+ read_folder[1:]
 
+    # Containing the string paths of all jpegs found in the folder, excluding setup
     files_s = sorted([file.__str__() for file in Path(s_folder).rglob("*.jpg") if "setup" not in file.__str__()])
 
+    # Adding anything missing from local production is adding from remote s:\
     for file in files_s:
         file = str(file)
-        if file not in file_dic and "setup" not in file:
+        # just in case setup shots got through
+        if file not in file_dic and "setup" not in file and sequence in str(file):
             file_name = file.split("\\")[-1]
             file_dic[file_name] = file
 
-    Keys = list(file_dic.keys())
-    Keys.sort()
-    file_dic = {i: file_dic[i] for i in Keys}
+    import pprint
+    #    print("1_file_dic")
+    #   pprint.pprint(file_dic)
 
+    # ###### Sort a shot dic into:
+    # {
+    # sq001_sh001: {
+    # 		frames:[pathname_1, pathname_2, pathname_3]}
+    # for pixel rgb filtering
+    shot_dic = {}
+
+    for shotframe_image in file_dic:
+        shot_name = shotframe_image.split(".")[0]
+        frame_pathname = file_dic[shotframe_image]
+        if shot_name not in shot_dic:
+            shot_dic[shot_name] = [frame_pathname]
+
+        else:
+            shot_dic[shot_name].append(frame_pathname)
+
+    # establishing process list (flaw of original code)
+    ## Make sure it's not sorted alphabetically but by shot name
     sq_files = []
 
-    for shot_name in file_dic:
-        if sequence in shot_name:
-            sq_files.append(file_dic[shot_name])
+    # shot dic is ready for filtering:
 
-    #import pprint
-    #pprint.pprint(sq_files)
+    for shot in shot_dic:
+        frames = shot_dic[shot]
+        filtered_frames = ImagePixelArray.filterShotFrames(frames)
+        shot_dic[shot] = filtered_frames
+        sq_files = sq_files + filtered_frames
+
+    # Sort the paths by filename
+    sq_files = sorted(sq_files, key=lambda x: os.path.basename(x))
+
+    print("sq_files:: ",sq_files)
+
+
+    import pprint
+    print("shot_dic")
+    pprint.pprint(shot_dic)
+
 
 
     pur_file.images = [process_image(os.path.join(read_folder, file)) for file in sq_files]
@@ -157,20 +192,53 @@ def generate(read_folder, write_file,sequence):
     # Start transforming images to automatically order
     transforms = [transform for image in pur_file.images for transform in image.transforms]
 
-    [transform.scale_to_height(1000) for transform in transforms]  # normalize all images to height 1000
+    print("Image Name:")
+    for image in pur_file.images:
+        print(image.transforms[0].name)
+        print(image.transforms)
+
+    # [transform.scale_to_height(1000) for transform in transforms]  # normalize all images to height 1000
 
     total_width = sum([transform.width for transform in transforms])
 
     all_rows = [transforms]
 
-    rows = []
-
     import math
     total_rows = math.ceil(len(transforms)/3)
 
-    # Start index for slicing
-    start_index = 0
+    rows = []
+    # Start slicing transform into row ber shot number
+    subset_row = []
+    last_image_shot= ""
 
+    list_length = len(transforms)
+
+    for index,transform in enumerate(transforms):
+        image_pathname = str(transform.name).split("\\")[-1]
+        image_shot = image_pathname.split(".")[0]
+        print(image_pathname)
+        print(image_shot)
+        if not last_image_shot:
+            subset_row = [transform]
+        elif last_image_shot == image_shot:
+            subset_row.append(transform)
+        elif last_image_shot != image_shot:
+            rows.append(subset_row)
+            subset_row = [transform]
+        if index == list_length-1:
+            subset_row.append(transform)
+            rows.append(subset_row)
+
+        last_image_shot = image_shot
+
+    # Debug, remove for release
+
+    for i,row in enumerate(rows):
+        print(i)
+        for transform in row:
+            print(transform.name)
+
+    """
     while len(rows) < total_rows:
         # Slice the next set of elements from all_transforms
         subset = transforms[start_index:start_index + 3]
@@ -184,6 +252,7 @@ def generate(read_folder, write_file,sequence):
         # Break the loop if start_index exceeds the length of all_transforms
         if start_index >= len(transforms):
             break
+    """
 
     # Normalize row widths and actually place images, this makes everything line up perfectly.
     placement_y = 0
@@ -191,17 +260,17 @@ def generate(read_folder, write_file,sequence):
     # if not empty
     for row in [row for row in rows if row]:  # deals with empty rows
         row_width = sum([transform.width for transform in row])
-        scale_factor = 1000/row_width  # the entire row is normalized to 1000 width
+        scale_factor = 1000  # the entire row is normalized to 1000 width
 
         placement_x = 0
         for transform in row:
-            transform.scale(scale_factor)
+            #transform.scale(scale_factor)
 
             transform.x = placement_x + transform.width / 2
             placement_x += transform.width
             transform.y = placement_y + transform.height / 2
 
-        placement_y += 1000 * scale_factor  # images are 1000 height and scaled to row width
+        placement_y += transform.height + 200
 
     pur_file.write(write_file)
     print("Done! File created")

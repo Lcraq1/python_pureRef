@@ -66,7 +66,6 @@ def samplePixelRGB(pixel_list,opened_image= Image.Image()):
 
     # debug function to show sample locations
     opened_image.save("modified_image.jpg")
-    opened_image.show()
 
     return pixel_dic
 
@@ -101,9 +100,10 @@ def pixelCompare(image_pixel_dic, reference_pixel_dic, mismatch_threshhold = .3)
 
         # Pixel coordinates should always match
         # Todo: generate error if do not match
+        """
         print("\npixel_xy_match: ", pixel_xy == reference_pixel_xy)
 
-        """
+        
         print("pixel_rgb: " + str(pixel) )
         print("reference_pixel_rgb: " + str(reference_pixel_rgb))
         """
@@ -118,20 +118,21 @@ def pixelCompare(image_pixel_dic, reference_pixel_dic, mismatch_threshhold = .3)
 
     # If we're over the failure threshold we'll consider the frame changed enough to keep it
     if false_count_fraction > mismatch_threshhold:
-        print("Allowed frame movement detected, keep")
+        # print("Allowed frame movement detected, keep")
         return True
     # Otherwise we don't need it
     elif false_count_fraction < mismatch_threshhold:
-        print("Frames match too closely, discard")
+        # print("Frames match too closely, discard")
         return False
 
-def filterShotFrames(shotframes_pathname_list):
+def filterShotFrames(shotframe_pathnames):
     """
     Removes frames that are too similar to the first to be useful in a contact sheet.
     Keeps frames that go over the determined threshold
-    :param shotframes_pathname_list: pathname list of one shot's frames. (provied from dictionary?)
+    :param shotframe_pathnames: pathname list of one shot's frames. (provied from dictionary?)
     :return:
     """
+    print("filtering frames:\n",shotframe_pathnames)
     # Generate a pixel coordination list, determined by size
     pixel_xy_list = generatePixelArray(sample_count=25)
 
@@ -140,10 +141,10 @@ def filterShotFrames(shotframes_pathname_list):
     reference_pixel_dic = {}
 
     # Image pathnames that make it through the filter
-    image_pathname_list = []
+    filtered_pathnames = []
 
 
-    for frame in shotframes_pathname_list:
+    for frame in shotframe_pathnames:
         frame_pathname = str(frame)
         # Opening image for use with PIL
         image = Image.open(frame_pathname)
@@ -154,10 +155,11 @@ def filterShotFrames(shotframes_pathname_list):
             reference_pixel_dic = samplePixelRGB(pixel_xy_list,opened_image=image)
 
             # Always keeping the first frame and adding it to the image_pathname_list
-            image_pathname_list.append(frame_pathname)
+            filtered_pathnames.append(frame_pathname)
+            """
             print("Keeping first image:",frame_pathname)
 
-            """
+            
             pprint.pp(reference_pixel_dic)
             """
 
@@ -172,14 +174,15 @@ def filterShotFrames(shotframes_pathname_list):
                                            mismatch_threshhold=.3)
             # If our mismatch proportion his higher mismatch_threshhold, we keep the frame
             if is_pixels_mismatch:
-                print("kept image:\n",frame_pathname)
-                image_pathname_list.append(frame_pathname)
+                # print("kept image:\n",frame_pathname)
+                filtered_pathnames.append(frame_pathname)
 
             # If our mismatch proportion his lower, there's not enough movement to keep the frame
+            """
             elif not is_pixels_mismatch:
                 print("discarding image:\n", frame_pathname)
 
-            """
+            
             print("##### image_pixel_dic#####")
             print(jpg)
             pprint.pp(image_pixel_dic)
@@ -190,13 +193,16 @@ def filterShotFrames(shotframes_pathname_list):
             # Ready for a new Loop
             reference_pixel_dic = image_pixel_dic
 
-    pprint.pprint(image_pathname_list)
+    print("filtered_pathnames:\n",filtered_pathnames,"\n")
+    return filtered_pathnames
 
-test_path = r"C:\Users\lcraquelin\Pictures\sq_001_sh_001"
-shotframe_pathname_list = sorted([file.__str__() for file in Path(test_path).rglob("*.jpg")])
-print(shotframe_pathname_list)
+if __name__ == "__main__":
+    # Call the function only when the file is executed directly
+    test_path = r"C:\Users\lcraquelin\Pictures\sq_001_sh_001"
+    shotframe_pathname_list = sorted([file.__str__() for file in Path(test_path).rglob("*.jpg")])
+    print(shotframe_pathname_list)
 
-filterShotFrames(shotframe_pathname_list)
+    filterShotFrames(shotframe_pathname_list)
 
 
 
