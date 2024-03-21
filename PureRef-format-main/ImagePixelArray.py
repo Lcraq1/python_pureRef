@@ -132,7 +132,6 @@ def filterShotFrames(shotframe_pathnames):
     :param shotframe_pathnames: pathname list of one shot's frames. (provied from dictionary?)
     :return:
     """
-    print("filtering frames:\n",shotframe_pathnames)
     # Generate a pixel coordination list, determined by size
     pixel_xy_list = generatePixelArray(sample_count=25)
 

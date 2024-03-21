@@ -173,13 +173,6 @@ def generate(read_folder, write_file,sequence):
     # Sort the paths by filename
     sq_files = sorted(sq_files, key=lambda x: os.path.basename(x))
 
-    print("sq_files:: ",sq_files)
-
-
-    import pprint
-    print("shot_dic")
-    pprint.pprint(shot_dic)
-
 
 
     pur_file.images = [process_image(os.path.join(read_folder, file)) for file in sq_files]
@@ -191,11 +184,6 @@ def generate(read_folder, write_file,sequence):
 
     # Start transforming images to automatically order
     transforms = [transform for image in pur_file.images for transform in image.transforms]
-
-    print("Image Name:")
-    for image in pur_file.images:
-        print(image.transforms[0].name)
-        print(image.transforms)
 
     # [transform.scale_to_height(1000) for transform in transforms]  # normalize all images to height 1000
 
@@ -233,12 +221,14 @@ def generate(read_folder, write_file,sequence):
 
     # Debug, remove for release
 
+    """
+
     for i,row in enumerate(rows):
         print(i)
         for transform in row:
             print(transform.name)
 
-    """
+   
     while len(rows) < total_rows:
         # Slice the next set of elements from all_transforms
         subset = transforms[start_index:start_index + 3]
@@ -266,7 +256,7 @@ def generate(read_folder, write_file,sequence):
         for transform in row:
             #transform.scale(scale_factor)
 
-            transform.x = placement_x + transform.width / 2
+            transform.x = placement_x + 50 + transform.width / 2
             placement_x += transform.width
             transform.y = placement_y + transform.height / 2
 
