@@ -77,3 +77,4 @@ def getFolderInput():
 if __name__ == "__main__":
     # Call the function only when the file is executed directly
     getFolderInput()
+    completeConfirm = input("Press Enter to Exit")

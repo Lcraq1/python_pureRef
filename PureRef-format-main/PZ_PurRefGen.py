@@ -13,7 +13,7 @@ import ImagePixelArray
     
     PZ_PureRefGen - PurRef Tool
     
-Version: 0.12 
+Version: 1.12 
 Author: Luc Craquelin
 
 credit: https://github.com/FyorDev/PureRef-format.git
